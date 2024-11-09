@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+requests
+goose3
+python-dotenv
+pydantic
+flask
+newspaper3k
+openai
+tiktoken
