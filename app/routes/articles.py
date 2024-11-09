@@ -1,10 +1,12 @@
 from flask import Blueprint, current_app, jsonify
 import requests
+from app.utils.db import get_articles
 
+articles_newsapi_bp = Blueprint('articles_newsapi', __name__)
 articles_bp = Blueprint('articles', __name__)
 
-@articles_bp.route('/articles', methods=['GET'])
-def get_articles():
+@articles_newsapi_bp.route('/articles_newsapi', methods=['GET'])
+def get_articles_newsapi():
     api_url = 'https://api.thenewsapi.com/v1/news/all'
 
     params = {
@@ -21,4 +23,9 @@ def get_articles():
     data = response.json()
     articles = data.get('data', [])
 
+    return jsonify(articles)
+
+@articles_bp.route('/articles', methods=['GET'])
+def get_articles_route():
+    articles = get_articles()
     return jsonify(articles)
