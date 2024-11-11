@@ -1,9 +1,11 @@
 from flask import Blueprint, current_app, jsonify
 import requests
-from app.utils.db import get_articles
+from app.utils.db import get_articles, get_article_by_id
+from flask import request
 
 articles_newsapi_bp = Blueprint('articles_newsapi', __name__)
 articles_bp = Blueprint('articles', __name__)
+article_by_id_bp = Blueprint('article', __name__)
 
 @articles_newsapi_bp.route('/articles_newsapi', methods=['GET'])
 def get_articles_newsapi():
@@ -28,4 +30,35 @@ def get_articles_newsapi():
 @articles_bp.route('/articles', methods=['GET'])
 def get_articles_route():
     articles = get_articles()
-    return jsonify(articles)
+    articles_list = [
+        {
+            'article_id': article[0],
+            'original_url': article[1],
+            'title': article[2],
+            'language': article[3],
+            'level': article[4]
+        }
+        for article in articles
+    ]
+    return jsonify(articles_list)
+
+@article_by_id_bp.route('/article_by_id', methods=['GET'])
+def get_article():
+    article_id = request.args.get('id')
+    if not article_id:
+        return jsonify({'error': 'Article ID is required'}), 400
+
+    article = get_article_by_id(article_id)
+    if article:
+        article_dict = {
+            'index': 1,
+            'article_id': article[1],
+            'original_url': article[2],
+            'title': article[3],
+            'simplified_text': article[4],
+            'language': article[5],
+            'level': article[6]
+        }
+        return jsonify(article_dict)
+    else:
+        return jsonify({'error': 'Article not found'}), 404

@@ -39,19 +39,48 @@ def scrape_bbc(url):
     # Find the main article tag
     article = soup.find('article')
     if article:
-        content = []
-        # Loop through each <p> tag within the article
-        for paragraph in article.find_all('p'):
-            # Remove any <u> tags within the paragraph
-            for u_tag in paragraph.find_all('u'):
-                u_tag.decompose()  # Remove <u> tag
+        article_content = []
+        # Loop through each <p> and <figure> tag within the article
+        for position, element in enumerate(article.find_all(['p', 'figure'])):
+            # Remove any <u> tags within the element
 
-            paragraph_text = paragraph.get_text(strip=True)
-            content.append(paragraph_text)
-            logger.debug("Extracted paragraph text: %s", paragraph_text)
+            if element.name == 'figure':
+                img_tag = element.find('img')
+                if img_tag:
+                    logger.debug("Found img tag: %s", img_tag)
+                    if 'srcset' in img_tag.attrs:
+                        logger.debug("Found srcset attribute in img tag: %s", img_tag['srcset'])
+                        # Extract the highest resolution image URL from the srcset attribute
+                        srcset = img_tag['srcset']
+                        image_url = srcset.split(',')[-1].split()[0]
+                        article_content.append({
+                            'position': position,
+                            'type': 'image',
+                            'content': image_url
+                        })
+                        logger.debug("Extracted image URL: %s", image_url)
+                    else:
+                        print("srcset attribute not found in img tag.")
+                        logger.debug("srcset attribute not found in img tag.")
+                else:
+                    logger.debug("img tag not found.")
 
-        article_content = " ".join(content)
+            if element.name == 'p':
+                for u_tag in element.find_all('u'):
+                    u_tag.decompose()  # Remove <u> tag
+                paragraph_text = element.get_text(strip=True)
+                article_content.append(
+                    {
+                        'position': position,
+                        'type': 'paragraph',
+                        'content': paragraph_text
+                    }
+                )
+                logger.debug("Extracted element text: %s", paragraph_text)
+
+
         logger.debug("Full article content extracted.")
+        print(article_content)
         return article_content, title
     else:
         logger.warning("No article content found.")
