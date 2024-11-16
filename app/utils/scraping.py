@@ -6,6 +6,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
 import logging
+import os
 
 from app.models.article_element import ArticleElement
 
@@ -21,8 +22,16 @@ def scrape_bbc(url):
     chrome_options.add_argument("--headless")  # Run in headless mode
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
-    service = Service('C:/chromedriver/chromedriver.exe')  # Update with the path to your ChromeDriver
-    driver = webdriver.Chrome(service=service, options=chrome_options)
+
+    if 'DYNO' in os.environ:  # Check if running on Heroku
+        chrome_binary_path = "/app/.chrome-for-testing/chrome-linux64/chrome"
+        chromedriver_path = "/app/.chrome-for-testing/chromedriver-linux64/chromedriver"
+        chrome_options.binary_location = chrome_binary_path
+        service = Service(chromedriver_path)
+        driver = webdriver.Chrome(service=service, options=chrome_options)
+    else:
+        service = Service('C:/chromedriver/chromedriver.exe')
+        driver = webdriver.Chrome(service=service, options=chrome_options)
 
     try:
         driver.get(url)
