@@ -24,8 +24,10 @@ def scrape_bbc(url):
     chrome_options.add_argument("--no-sandbox")
 
     if 'DYNO' in os.environ:  # Check if running on Heroku
-        chrome_options.binary_location = os.environ.get("GOOGLE_CHROME_BIN")
-        service = Service(os.environ.get("CHROMEDRIVER_PATH"))
+        chrome_binary_path = "/app/.chrome-for-testing/chrome-linux64/chrome"
+        chromedriver_path = "/app/.chrome-for-testing/chromedriver-linux64/chromedriver"
+        chrome_options.binary_location = chrome_binary_path
+        service = Service(chromedriver_path)
         driver = webdriver.Chrome(service=service, options=chrome_options)
     else:
         service = Service('C:/chromedriver/chromedriver.exe')
