@@ -1,6 +1,5 @@
 import sqlite3
 import logging
-import logging
 
 def init_db():
     conn = sqlite3.connect('articles.db')
@@ -11,16 +10,16 @@ def init_db():
             article_id TEXT NOT NULL,
             original_url TEXT NOT NULL,
             title TEXT NOT NULL,
-            translated_text TEXT NOT NULL, 
+            translated_text TEXT NOT NULL,
             language TEXT NOT NULL,
-            level INTEGER NOT NULL
+            level INTEGER NOT NULL,
+            image_url TEXT
         )
     ''')
     conn.commit()
     conn.close()
 
-
-def store_article(article_id, original_url, title, translated_text, language, level):
+def store_article(article_id, original_url, title, translated_text, language, level, image_url=None):
     conn = None
     try:
         conn = sqlite3.connect('articles.db')
@@ -36,15 +35,15 @@ def store_article(article_id, original_url, title, translated_text, language, le
             # Update the existing article
             cursor.execute('''
                 UPDATE articles
-                SET article_id = ?, title = ?, translated_text = ?
+                SET article_id = ?, title = ?, translated_text = ?, image_url = ?
                 WHERE id = ?
-            ''', (article_id, title, translated_text, existing_article[0]))
+            ''', (article_id, title, translated_text, image_url, existing_article[0]))
         else:
             # Insert a new article
             cursor.execute('''
-                INSERT INTO articles (article_id, original_url, title, translated_text, language, level)
-                VALUES (?, ?, ?, ?, ?, ?)
-            ''', (article_id, original_url, title, translated_text, language, level))
+                INSERT INTO articles (article_id, original_url, title, translated_text, language, level, image_url)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ''', (article_id, original_url, title, translated_text, language, level, image_url))
 
         conn.commit()
     except sqlite3.Error as e:
@@ -58,7 +57,7 @@ def store_article(article_id, original_url, title, translated_text, language, le
 def get_articles():
     conn = sqlite3.connect('articles.db')
     cursor = conn.cursor()
-    cursor.execute('SELECT article_id, original_url, title, language, level FROM articles')
+    cursor.execute('SELECT article_id, original_url, title, language, level, image_url FROM articles')
     articles = cursor.fetchall()
     conn.close()
     return articles

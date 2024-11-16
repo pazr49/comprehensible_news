@@ -36,7 +36,8 @@ def get_articles_route():
             'original_url': article[1],
             'title': article[2],
             'language': article[3],
-            'level': article[4]
+            'level': article[4],
+            'image_url': article[5]
         }
         for article in articles
     ]
@@ -57,7 +58,8 @@ def get_article():
             'title': article[3],
             'simplified_text': article[4],
             'language': article[5],
-            'level': article[6]
+            'level': article[6],
+            'image_url': article[7]
         }
         return jsonify(article_dict)
     else:

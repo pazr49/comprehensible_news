@@ -1,14 +1,16 @@
 import logging
-
 from openai import OpenAI
 import os
 from app.utils.text_chuncking import estimate_tokens
+import pycountry
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 levels = ['A1', 'A2', 'B1', 'B2', 'C1']
+
+
 prompts = {}
 for level in levels:
     PROMPT_FILE_PATH = os.path.join(os.path.dirname(__file__), f'../../resources/simplify_system_prompt_{level}.txt')
@@ -47,11 +49,15 @@ def translate_text(text, target_language, target_level):
 
     client = OpenAI()
 
+    language = pycountry.languages.get(alpha_2=target_language)
+
     try:
         completion = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": f"Translate the following text into {target_language}. Keep in mind this is for an {target_level} level {target_language} learner so try to avoid using complex word translations: "},
+                {"role": "system", "content": f"Translate the following text into {language}. Keep in mind this is for "
+                                              f"an {target_level} level {language} learner so try to avoid using complex "
+                                              f"word translations, but do aim to translate as close to the original as possible: "},
                 {"role": "user", "content": text}
             ]
         )
