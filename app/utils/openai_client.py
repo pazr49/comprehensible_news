@@ -41,7 +41,7 @@ def simplify_text(text, target_level):
         return simplified_text, total_input_tokens, total_output_tokens
 
     except Exception as e:
-        logger.error(f"Error simplifying text")
+        logger.error(f"Error in simplifying text")
 
 
 def translate_text(text, target_language, target_level):
