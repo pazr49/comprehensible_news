@@ -25,7 +25,7 @@ def scrape_bbc(url):
 
     if 'DYNO' in os.environ:  # Check if running on Heroku
         chrome_options.binary_location = "/app/.apt/usr/bin/google-chrome"
-        service = Service("/app/.chromedriver/bin/chromedriver")
+        service = Service("/app/.apt/usr/bin/chromedriver")
     else:
         service = Service('C:/chromedriver/chromedriver.exe')
         # Update with the path to your ChromeDriver
