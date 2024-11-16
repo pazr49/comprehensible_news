@@ -8,3 +8,6 @@ flask
 newspaper3k
 openai
 tiktoken
+selenium
+pycountry
+psycopg2

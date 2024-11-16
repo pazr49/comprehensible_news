@@ -2,9 +2,12 @@ from flask import Flask
 from dotenv import load_dotenv
 import os
 from app.utils.db import init_db
+from flask_cors import CORS
+
 
 def create_app():
     app = Flask(__name__)
+    CORS(app)
 
     # Load environment variables
     load_dotenv()
@@ -16,12 +19,13 @@ def create_app():
     init_db()
 
     # Register Blueprints
-    from app.routes.articles import articles_bp, articles_newsapi_bp
+    from app.routes.articles import articles_bp, articles_newsapi_bp, article_by_id_bp
     from app.routes.sources import sources_bp
     from app.routes.article_content import article_content_bp
     from app.routes.batch_generate_articles import batch_generate_articles_bp
 
     app.register_blueprint(articles_bp)
+    app.register_blueprint(article_by_id_bp)
     app.register_blueprint(articles_newsapi_bp)
     app.register_blueprint(sources_bp)
     app.register_blueprint(article_content_bp)

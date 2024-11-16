@@ -1,6 +1,13 @@
-import requests
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
 import logging
+
+from app.models.article_element import ArticleElement
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
@@ -9,18 +16,27 @@ logger = logging.getLogger(__name__)
 def scrape_bbc(url):
     logger.debug("Starting scrape_bbc function with URL: %s", url)
 
-    # Send a GET request to the page
+    # Set up Selenium with ChromeDriver
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")  # Run in headless mode
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--no-sandbox")
+    service = Service('C:/chromedriver/chromedriver.exe')  # Update with the path to your ChromeDriver
+    driver = webdriver.Chrome(service=service, options=chrome_options)
+
     try:
-        response = requests.get(url)
-        response.raise_for_status()  # Raises an HTTPError if the request returned an unsuccessful status code
-    except requests.RequestException as e:
+        driver.get(url)
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, 'article')))
+        page_source = driver.page_source
+    except Exception as e:
         logger.error("Error retrieving the page: %s", e)
+        driver.quit()
         return None, None
 
-    logger.debug("Page retrieved successfully. Status Code: %s", response.status_code)
+    logger.debug("Page retrieved successfully.")
 
     # Parse the page content with BeautifulSoup
-    soup = BeautifulSoup(response.content, 'html.parser')
+    soup = BeautifulSoup(page_source, 'html.parser')
 
     # Extract the title from the headline block
     title_tag = soup.find('div', {'data-component': 'headline-block'})
@@ -32,27 +48,46 @@ def scrape_bbc(url):
     if more_like_this_section:
         # Get the grandparent <div> that contains the whole section and remove it
         parent_section = more_like_this_section.find_parent('div')
-        if parent_section:
+        if (parent_section):
             parent_section.decompose()
             logger.debug("Removed 'More like this' section.")
 
     # Find the main article tag
     article = soup.find('article')
     if article:
-        content = []
-        # Loop through each <p> tag within the article
-        for paragraph in article.find_all('p'):
-            # Remove any <u> tags within the paragraph
-            for u_tag in paragraph.find_all('u'):
-                u_tag.decompose()  # Remove <u> tag
+        article_content = []
+        # Loop through each <p> and <figure> tag within the article
+        for position, tag in enumerate(article.find_all(['p', 'figure'])):
+            if tag.name == 'figure':
+                img_tag = tag.find('img')
+                if img_tag:
+                    logger.debug("Found img tag: %s", img_tag)
+                    if 'srcset' in img_tag.attrs:
+                        logger.debug("Found srcset attribute in img tag: %s", img_tag['srcset'])
+                        # Extract the highest resolution image URL from the srcset attribute
+                        srcset = img_tag['srcset']
+                        image_url = srcset.split(',')[-1].split()[0]
+                        article_element = ArticleElement('image', image_url)
+                        article_content.append(article_element)
+                        logger.debug("Extracted image URL: %s", image_url)
+                    else:
+                        logger.debug("srcset attribute not found in img tag.")
+                else:
+                    logger.debug("img tag not found.")
 
-            paragraph_text = paragraph.get_text(strip=True)
-            content.append(paragraph_text)
-            logger.debug("Extracted paragraph text: %s", paragraph_text)
+            if tag.name == 'p':
+                for u_tag in tag.find_all('u'):
+                    u_tag.decompose()  # Remove <u> tag
+                paragraph_text = tag.get_text(strip=True)
+                article_element = ArticleElement('paragraph', paragraph_text)
+                article_content.append(article_element)
+                logger.debug("Extracted tag text: %s", paragraph_text)
 
-        article_content = " ".join(content)
         logger.debug("Full article content extracted.")
+        driver.quit()
+        print(article_content)
         return article_content, title
     else:
         logger.warning("No article content found.")
+        driver.quit()
         return None, title
