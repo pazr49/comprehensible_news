@@ -94,7 +94,6 @@ def scrape_bbc(url):
 
         logger.debug("Full article content extracted.")
         driver.quit()
-        print(article_content)
         return article_content, title
     else:
         logger.warning("No article content found.")

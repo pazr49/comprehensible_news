@@ -2,40 +2,18 @@ import logging
 import uuid
 import json
 
-from flask import Blueprint, request, jsonify
 from app.models.article_element import ArticleElement
 
 from app.utils.scraping import scrape_bbc
 from app.utils.text_chuncking import split_text_into_chunks, logger
 from app.utils.openai_client import simplify_text, translate_text
 from app.utils.db import store_article
-batch_generate_articles_bp = Blueprint('batch_generate_articles', __name__)
-
-article_links = [
-    'https://www.bbc.com/news/articles/c8dm0ljg4y6o',
-    'https://www.bbc.com/news/articles/c93716xdgzqo',
-    'https://www.bbc.com/news/articles/c33em6jrx1go',
-    'https://www.bbc.com/news/articles/c0mzgv4x901o',
-    'https://www.bbc.com/sport/boxing/articles/ceqxvxnyq7lo',
-    'https://www.bbc.com/news/articles/ckg79y3rz1eo',
-
-]
 
 
-@batch_generate_articles_bp.route('/batch_generate_articles', methods=['POST'])
-def batch_generate_articles():
+def batch_generate_articles(target_language, target_level, article_links):
     # Log the start of the batch generation process
     logging.info("Starting batch article generation process.")
 
-    target_language = request.args.get('target_language', 'fr')
-    target_level = request.args.get('target_level', 'A1')
-
-    data = request.get_json()
-    if not data:
-        logging.error("No data provided in the request.")
-        return jsonify({'error': 'No data provided'}), 400
-
-    translated_articles = []
     total_estimated_cost = 0
     for link in article_links:
         try:
@@ -47,6 +25,8 @@ def batch_generate_articles():
 
             # Split the article content into chunks
             chunks = split_text_into_chunks(article_content, 300)
+            logging.info(f"Text chunking process completed successfully for {link}")
+            print("Printing chunked article:" + json.dumps([element.to_dict() for element in chunks]))
             assert isinstance(chunks, list) and all(
                 isinstance(chunk, ArticleElement) for chunk in chunks), "chunks must be a list of ArticleElement"
             if chunks is None:
@@ -68,11 +48,12 @@ def batch_generate_articles():
                     logging.error("Text simplification failed for chunk in %s", link)
                     continue
                 simplified_text_array.append(ArticleElement('paragraph', simplified_text))
-            logger.info(f"Text simplification process completed successfully for {link}")
 
+            logger.info(f"Text simplification process completed successfully for {link}")
             #https://openai.com/api/pricing/
             estimated_cost_simplification = total_input_tokens * (0.15/1000000) + total_output_tokens * (0.6/1000000)
             logger.info(f"Estimated cost for simplification: ${estimated_cost_simplification}")
+            print("Printing simplified text" + json.dumps([element.to_dict() for element in simplified_text_array]))
 
             # Translate the simplified text
             translated_text_array = []
@@ -97,6 +78,7 @@ def batch_generate_articles():
                 translated_text_array.append(ArticleElement('paragraph', translated_text))
 
             logger.info(f"Text translation process completed successfully for {link}")
+            print("Printing translated text" + json.dumps([element.to_dict() for element in translated_text_array]))
 
             # Calculate the estimated cost for translation
             estimated_cost_of_translation = total_input_tokens * (0.15 / 1000000) + total_output_tokens * (0.6 / 1000000)
@@ -120,5 +102,3 @@ def batch_generate_articles():
     # Log the completion of the batch generation process
     logging.info("Batch article generation process completed.")
     logging.info(f"Total estimated cost: ${total_estimated_cost}")
-
-    return jsonify(translated_articles)

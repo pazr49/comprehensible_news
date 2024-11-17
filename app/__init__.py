@@ -22,13 +22,11 @@ def create_app():
     from app.routes.articles import articles_bp, articles_newsapi_bp, article_by_id_bp
     from app.routes.sources import sources_bp
     from app.routes.article_content import article_content_bp
-    from app.routes.batch_generate_articles import batch_generate_articles_bp
 
     app.register_blueprint(articles_bp)
     app.register_blueprint(article_by_id_bp)
     app.register_blueprint(articles_newsapi_bp)
     app.register_blueprint(sources_bp)
     app.register_blueprint(article_content_bp)
-    app.register_blueprint(batch_generate_articles_bp)
 
     return app

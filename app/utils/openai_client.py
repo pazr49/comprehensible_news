@@ -49,14 +49,12 @@ def translate_text(text, target_language, target_level):
 
     client = OpenAI()
 
-    language = pycountry.languages.get(alpha_2=target_language)
-
     try:
         completion = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": f"Translate the following text into {language}. Keep in mind this is for "
-                                              f"an {target_level} level {language} learner so try to avoid using complex "
+                {"role": "system", "content": f"Translate the following text into {target_language}. Keep in mind this is for "
+                                              f"an {target_level} level {target_language} learner so try to avoid using complex "
                                               f"word translations, but do aim to translate as close to the original as possible: "},
                 {"role": "user", "content": text}
             ]

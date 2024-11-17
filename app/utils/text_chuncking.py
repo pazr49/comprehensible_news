@@ -1,4 +1,5 @@
 import logging
+import json
 from app.models.article_element import ArticleElement
 
 # Configure logging
@@ -10,8 +11,14 @@ def split_text_into_chunks(article_content: list[ArticleElement], chunk_size=300
     current_chunk = ''
     current_chunk_word_count = 0
 
+    print("Printing article content:" + json.dumps([element.to_dict() for element in article_content]))
+
     for element in article_content:
         if element.type == 'image':
+            if current_chunk.strip():
+                chunks.append(ArticleElement('paragraph', current_chunk.strip()))
+                current_chunk = ''
+                current_chunk_word_count = 0
             chunks.append(element)
             continue
         para_word_count = len(element.content.split())
@@ -28,8 +35,8 @@ def split_text_into_chunks(article_content: list[ArticleElement], chunk_size=300
 
     total_chunks = len(chunks)
     logger.info(f"Total chunks created: {total_chunks}")
-    print(chunks)
     return chunks
+
 
 def estimate_tokens(text):
     return int(len(text.split()) * 1.5)
