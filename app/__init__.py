@@ -1,8 +1,9 @@
 from flask import Flask
 from dotenv import load_dotenv
 import os
-from app.utils.db import init_db
+from app.db.db import init_db
 from flask_cors import CORS
+
 
 
 def create_app():
@@ -19,13 +20,11 @@ def create_app():
     init_db()
 
     # Register Blueprints
-    from app.routes.articles import articles_bp, articles_newsapi_bp, article_by_id_bp
+    from app.routes.articles import articles_bp
     from app.routes.sources import sources_bp
     from app.routes.article_content import article_content_bp
 
     app.register_blueprint(articles_bp)
-    app.register_blueprint(article_by_id_bp)
-    app.register_blueprint(articles_newsapi_bp)
     app.register_blueprint(sources_bp)
     app.register_blueprint(article_content_bp)
 

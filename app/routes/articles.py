@@ -1,6 +1,6 @@
 from flask import Blueprint, current_app, jsonify
 import requests
-from app.utils.db import get_articles, get_article_by_id, get_simplified_articles, get_article_by_simplified_id
+from app.db.db import get_articles, get_article_by_id, get_simplified_articles, get_article_by_simplified_id
 from flask import request
 
 articles_bp = Blueprint('articles', __name__)

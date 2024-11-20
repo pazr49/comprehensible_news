@@ -1,7 +1,7 @@
 import logging
 from openai import OpenAI
 import os
-from app.utils.text_chuncking import estimate_tokens
+from app.utils import estimate_tokens
 import pycountry
 
 # Configure logging
