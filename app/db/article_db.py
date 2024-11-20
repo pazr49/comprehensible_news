@@ -1,7 +1,6 @@
 import logging
 import psycopg2
-from app.db.db_connection import get_db_connection
-
+from app.db.db import get_db_connection
 
 def store_article(article):
     conn = None
@@ -15,19 +14,19 @@ def store_article(article):
         ''', (article.original_url, article.language, article.level))
         existing_article = cursor.fetchone()
 
-        if existing_article:
+        if existing_article is not None:
             # Update the existing article
             cursor.execute('''
                 UPDATE articles
-                SET article_id = %s, title = %s, translated_text = %s, image_url = %s, simplified_id = %s
+                SET article_id = %s, title = %s, translated_text = %s, image_url = %s
                 WHERE id = %s
-            ''', (article.article_id, article.title, article.translated_text, article.image_url, existing_article[0], article.simplified_id))
+            ''', (article.article_id, article.title, article.content, article.image_url, existing_article[0]))
         else:
             # Insert a new article
             cursor.execute('''
-                INSERT INTO articles (article_id, original_url, title, translated_text, language, level, image_url, simplified_id)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-            ''', (article.article_id, article.original_url, article.title, article.translated_text, article.language, article.level, article.image_url, article.simplified_id))
+                INSERT INTO articles (article_id, original_url, title, content, language, level, image_url)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            ''', (article.article_id, article.original_url, article.title, article.content, article.language, article.level, article.image_url))
 
         conn.commit()
     except psycopg2.Error as e:

@@ -52,20 +52,21 @@ def init_db():
             content TEXT NOT NULL,
             language TEXT NOT NULL,
             level TEXT NOT NULL,
-            image_url TEXT, 
+            image_url TEXT
         )
     ''')
 
     cursor.execute('''
-         CREATE TABLE IF NOT EXISTS rss_articles (
-             id SERIAL PRIMARY KEY,
-             title TEXT NOT NULL,
-             url TEXT NOT NULL,
-             thumbnail TEXT
-             summary TEXT
-             published_at TEXT
-         )
-         ''')
+        CREATE TABLE IF NOT EXISTS rss_articles (
+            id SERIAL PRIMARY KEY,
+            title TEXT NOT NULL,
+            url TEXT NOT NULL,
+            thumbnail TEXT,
+            summary TEXT,
+            published_at TEXT, 
+            feed_name TEXT   
+        )
+    ''')
 
     conn.commit()
     conn.close()

@@ -42,13 +42,14 @@ def bbc_rss_reader(feed_name="news", num_articles=5):
 
         articles = []
         for entry in feed.entries[:num_articles]:
+            thumbnail_url = entry.get("media_thumbnail")[0]['url'] if entry.get("media_thumbnail") else None
             article = RssArticle(
                 feed_name=feed_name,
                 title=entry.get("title"),
                 link=entry.get("link"),
                 summary=entry.get("summary"),
                 published=entry.get("published"),
-                thumbnail=entry.get("media_thumbnail")
+                thumbnail=thumbnail_url
             )
             articles.append(article)
             logger.info(f"Article '{article.title}' added to the list.")

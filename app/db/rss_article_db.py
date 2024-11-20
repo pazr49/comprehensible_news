@@ -1,8 +1,12 @@
-from app.db.db_connection import get_db_connection
+from app.db.db import get_db_connection
+from app.models.rss_article import RssArticle
 
+
+from app.db.db import get_db_connection
+from app.models.rss_article import RssArticle
 
 # takes a rss_article and stores it in the database
-def store_rss_article(rss_article):
+def store_rss_article(rss_article: RssArticle):
     conn = None
     try:
         conn = get_db_connection()
@@ -11,7 +15,7 @@ def store_rss_article(rss_article):
         # Check if an article with the same URL already exists
         cursor.execute('''
             SELECT id FROM rss_articles WHERE url = %s
-        ''', (rss_article['url'],))
+        ''', (rss_article.link,))
         existing_article = cursor.fetchone()
 
         if existing_article:
@@ -20,13 +24,13 @@ def store_rss_article(rss_article):
                 UPDATE rss_articles
                 SET title = %s, thumbnail = %s, summary = %s, published_at = %s
                 WHERE id = %s
-            ''', (rss_article['title'], rss_article['thumbnail'], rss_article['summary'], rss_article['published_at'], existing_article[0]))
+            ''', (rss_article.title, rss_article.thumbnail, rss_article.summary, rss_article.published, existing_article[0]))
         else:
             # Insert a new article
             cursor.execute('''
                 INSERT INTO rss_articles (title, url, thumbnail, summary, published_at, feed_name)
                 VALUES (%s, %s, %s, %s, %s, %s)
-            ''', (rss_article['title'], rss_article['url'], rss_article['thumbnail'], rss_article['summary'], rss_article['published_at', rss_article['feed_name']]))
+            ''', (rss_article.title, rss_article.link, rss_article.thumbnail, rss_article.summary, rss_article.published, rss_article.feed_name))
 
         conn.commit()
     except Exception as e:
