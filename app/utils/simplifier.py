@@ -1,6 +1,6 @@
 import logging
 from app.models.article_element import ArticleElement
-from app.utils.openai_client import simplify_text
+from app.utils.openai_client import open_ai_simplify_text
 from app.utils import logger
 
 def simplify_article(rss_article, article_chunks, target_level):
@@ -14,7 +14,7 @@ def simplify_article(rss_article, article_chunks, target_level):
             continue
 
         try:
-            simplified_text, num_input_tokens, num_output_tokens = simplify_text(chunk.content, target_level)
+            simplified_text, num_input_tokens, num_output_tokens = open_ai_simplify_text(chunk.content, target_level)
             if simplified_text is None:
                 raise ValueError("Simplified text is None")
         except Exception as e:

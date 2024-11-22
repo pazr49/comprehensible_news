@@ -13,14 +13,14 @@ from app.models.article_element import ArticleElement
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
-def scrape_and_chunk_article(rss_article):
+def scrape_and_chunk_article(rss_article, chunk_size):
     try:
         article_content = scrape_bbc(rss_article.link)
         if article_content is None:
             logger.error("Article content extraction failed for %s", rss_article.link)
             return None
 
-        chunks = split_text_into_chunks(article_content, 300)
+        chunks = split_text_into_chunks(article_content, chunk_size)
         logger.info(f"Text chunking process completed successfully for {rss_article.link}")
         return chunks
     except Exception as e:
@@ -93,7 +93,7 @@ def scrape_bbc(url):
     logger.debug("Full article content extracted.")
     return article_content
 
-def split_text_into_chunks(article_content, chunk_size=300):
+def split_text_into_chunks(article_content, chunk_size):
     chunks = []
     current_chunk = ''
     current_chunk_word_count = 0

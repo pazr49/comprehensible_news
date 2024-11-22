@@ -1,6 +1,9 @@
 import logging
 import psycopg2
 from app.db.db import get_db_connection
+from app.models.article import Article
+from app.models.article_element import ArticleElement
+import json
 
 def store_article(article):
     conn = None
@@ -37,13 +40,27 @@ def store_article(article):
             conn.close()
     return True
 
-def get_articles():
+def get_articles(language='en', level='A1'):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute('SELECT article_id, original_url, title, language, level, image_url, simplified_id FROM articles')
+    cursor.execute('SELECT article_id, original_url, title, language, level, image_url FROM articles WHERE language = %s AND level = %s', (language, level))
     articles = cursor.fetchall()
     conn.close()
-    return articles
+
+    if articles:
+        articles_list = [
+            {
+                'article_id': article[0],
+                'original_url': article[1],
+                'title': article[2],
+                'language': article[3],
+                'level': article[4],
+                'image_url': article[5]
+            }
+            for article in articles
+        ]
+        return articles_list
+    return None
 
 def get_article_by_id(article_id):
     conn = get_db_connection()
@@ -51,4 +68,19 @@ def get_article_by_id(article_id):
     cursor.execute('SELECT * FROM articles WHERE article_id = %s', (article_id,))
     article = cursor.fetchone()
     conn.close()
-    return article
+
+    if article:
+        content = json.loads(article[4])
+        article_elements = [element.to_dict() for element in (ArticleElement.from_dict(e) for e in content)]
+
+        article_dict = {
+            'article_id': article[1],
+            'original_url': article[2],
+            'title': article[3],
+            'content': article_elements,
+            'language': article[5],
+            'level': article[6],
+            'image_url': article[7]
+        }
+        return Article.from_dict(article_dict)
+    return None

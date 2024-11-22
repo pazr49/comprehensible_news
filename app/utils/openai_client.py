@@ -18,7 +18,7 @@ for level in levels:
         prompts[level] = file.read()
 
 # Takes a text input and simplifies the language using the GPT-4o-mini model
-def simplify_text(text, target_level):
+def open_ai_simplify_text(text, target_level):
     logger.info("Starting simplifying process.")
 
     client = OpenAI()
@@ -44,7 +44,7 @@ def simplify_text(text, target_level):
         logger.error(f"Error in simplifying text")
 
 
-def translate_text(text, target_language, target_level):
+def open_ai_translate_text(text, target_language, target_level):
     logger.info("Starting translation process.")
 
     client = OpenAI()

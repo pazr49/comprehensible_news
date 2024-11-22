@@ -6,7 +6,7 @@ from app.models.article_element import ArticleElement
 
 from app.utils.scraper import scrape_bbc
 from app.utils.text_chuncking import split_text_into_chunks, logger
-from app.utils.openai_client import simplify_text, translate_text
+from app.utils.openai_client import open_ai_simplify_text, open_ai_translate_text
 from app.db.db import store_article
 
 
@@ -40,7 +40,7 @@ def batch_generate_articles(target_language, target_level, rss_articles):
                     simplified_text_array.append(chunk)
                     continue
                 # Simplify each chunk of text
-                simplified_text, num_input_tokens, num_output_tokens = simplify_text(chunk.content, target_level)
+                simplified_text, num_input_tokens, num_output_tokens = open_ai_simplify_text(chunk.content, target_level)
                 total_input_tokens += num_input_tokens
                 total_output_tokens += num_output_tokens
                 if simplified_text is None:
@@ -63,8 +63,8 @@ def batch_generate_articles(target_language, target_level, rss_articles):
                 if chunk.type == 'image':
                     translated_text_array.append(chunk)
                     continue
-                translated_text, num_input_tokens, num_output_tokens = translate_text(chunk.content, target_language,
-                                                                                      target_level)
+                translated_text, num_input_tokens, num_output_tokens = open_ai_translate_text(chunk.content, target_language,
+                                                                                              target_level)
                 total_input_tokens += num_input_tokens
                 total_output_tokens += num_output_tokens
                 if translated_text is None:
