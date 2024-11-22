@@ -4,33 +4,32 @@ import json
 
 from app.models.article_element import ArticleElement
 
-from app.utils.scraping import scrape_bbc
+from app.utils.scraper import scrape_bbc
 from app.utils.text_chuncking import split_text_into_chunks, logger
-from app.utils.openai_client import simplify_text, translate_text
-from app.utils.db import store_article
+from app.utils.openai_client import open_ai_simplify_text, open_ai_translate_text
+from app.db.db import store_article
 
 
-def batch_generate_articles(target_language, target_level, article_links):
+def batch_generate_articles(target_language, target_level, rss_articles):
     # Log the start of the batch generation process
     logging.info("Starting batch article generation process.")
 
     total_estimated_cost = 0
-    for link in article_links:
+    for rss_article in rss_articles:
         try:
-            # Scrape the article content and title
-            article_content, title = scrape_bbc(link)
+            # Scrape the article content
+            article_content, _ = scrape_bbc(rss_article.link)
             if article_content is None:
-                logging.error("Article content extraction failed for %s", link)
+                logging.error("Article content extraction failed for %s", rss_article.link)
                 continue
 
             # Split the article content into chunks
             chunks = split_text_into_chunks(article_content, 300)
-            logging.info(f"Text chunking process completed successfully for {link}")
-            print("Printing chunked article:" + json.dumps([element.to_dict() for element in chunks]))
+            logging.info(f"Text chunking process completed successfully for {rss_article.link}")
             assert isinstance(chunks, list) and all(
                 isinstance(chunk, ArticleElement) for chunk in chunks), "chunks must be a list of ArticleElement"
             if chunks is None:
-                logging.error("Text chunking failed for %s", link)
+                logging.error("Text chunking failed for %s", rss_article.link)
                 continue
 
             simplified_text_array = []
@@ -41,15 +40,15 @@ def batch_generate_articles(target_language, target_level, article_links):
                     simplified_text_array.append(chunk)
                     continue
                 # Simplify each chunk of text
-                simplified_text, num_input_tokens, num_output_tokens = simplify_text(chunk.content, target_level)
+                simplified_text, num_input_tokens, num_output_tokens = open_ai_simplify_text(chunk.content, target_level)
                 total_input_tokens += num_input_tokens
                 total_output_tokens += num_output_tokens
                 if simplified_text is None:
-                    logging.error("Text simplification failed for chunk in %s", link)
+                    logging.error("Text simplification failed for chunk in %s", rss_article.link)
                     continue
                 simplified_text_array.append(ArticleElement('paragraph', simplified_text))
 
-            logger.info(f"Text simplification process completed successfully for {link}")
+            logger.info(f"Text simplification process completed successfully for {rss_article.link}")
             #https://openai.com/api/pricing/
             estimated_cost_simplification = total_input_tokens * (0.15/1000000) + total_output_tokens * (0.6/1000000)
             logger.info(f"Estimated cost for simplification: ${estimated_cost_simplification}")
@@ -57,27 +56,23 @@ def batch_generate_articles(target_language, target_level, article_links):
 
             # Translate the simplified text
             translated_text_array = []
-            main_image_url = ''
+            main_image_url = rss_article.thumbnail
             total_input_tokens = 0
             total_output_tokens = 0
             for chunk in simplified_text_array:
                 if chunk.type == 'image':
-                    if main_image_url == '':
-                        main_image_url = chunk.content  # Assuming chunk.content contains the image URL
-                        continue
-                    else:
-                        translated_text_array.append(chunk)
+                    translated_text_array.append(chunk)
                     continue
-                translated_text, num_input_tokens, num_output_tokens = translate_text(chunk.content, target_language,
-                                                                                      target_level)
+                translated_text, num_input_tokens, num_output_tokens = open_ai_translate_text(chunk.content, target_language,
+                                                                                              target_level)
                 total_input_tokens += num_input_tokens
                 total_output_tokens += num_output_tokens
                 if translated_text is None:
-                    logging.error("Text translation failed for chunk in %s", link)
+                    logging.error("Text translation failed for chunk in %s", rss_article.link)
                     continue
                 translated_text_array.append(ArticleElement('paragraph', translated_text))
 
-            logger.info(f"Text translation process completed successfully for {link}")
+            logger.info(f"Text translation process completed successfully for {rss_article.link}")
             print("Printing translated text" + json.dumps([element.to_dict() for element in translated_text_array]))
 
             # Calculate the estimated cost for translation
@@ -87,17 +82,17 @@ def batch_generate_articles(target_language, target_level, article_links):
             # Store the translated article in the database
             translated_text_json = json.dumps([element.to_dict() for element in translated_text_array])
             article_id = f'article_{uuid.uuid4().hex[:8]}'
-            if not store_article(article_id, link, title, translated_text_json, target_language, target_level, main_image_url):
-                logging.error("Failed to store article for %s", link)
+            if not store_article(article_id, rss_article.link, rss_article.title, translated_text_json, target_language, target_level, main_image_url):
+                logging.error("Failed to store article for %s", rss_article.link)
                 continue
 
-            logging.info("Article processed and stored successfully for %s", link)
+            logging.info("Article processed and stored successfully for %s", rss_article.link)
             logging.info(f"Total estimated cost for article {article_id}: ${estimated_cost_simplification + estimated_cost_of_translation}")
 
             total_estimated_cost += estimated_cost_simplification + estimated_cost_of_translation
 
         except Exception as e:
-            logging.exception("An error occurred while processing the article %s: %s", link, str(e))
+            logging.exception("An error occurred while processing the article %s: %s", rss_article.link, str(e))
 
     # Log the completion of the batch generation process
     logging.info("Batch article generation process completed.")

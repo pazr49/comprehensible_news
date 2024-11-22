@@ -2,7 +2,7 @@ import logging
 from flask import Blueprint, request, jsonify
 import requests
 from bs4 import BeautifulSoup
-from app.utils.openai_client import simplify_text
+from app.utils.openai_client import open_ai_simplify_text
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
@@ -77,7 +77,7 @@ def get_article_content():
 
     # Call OpenAI API to rewrite text in Spanish
     try:
-        simplified_text = simplify_text(article_content)
+        simplified_text = open_ai_simplify_text(article_content)
         logger.debug("Simplified text generated successfully.")
     except Exception as e:
         logger.error("Error during text simplification: %s", e)
