@@ -2,7 +2,6 @@ import logging
 from openai import OpenAI
 import os
 from app.utils import estimate_tokens
-import pycountry
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

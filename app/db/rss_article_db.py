@@ -1,6 +1,3 @@
-from app.db.db import get_db_connection
-from app.models.rss_article import RssArticle
-
 
 from app.db.db import get_db_connection
 from app.models.rss_article import RssArticle
