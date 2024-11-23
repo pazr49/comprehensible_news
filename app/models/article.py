@@ -1,6 +1,6 @@
 
 class Article:
-    def __init__(self, title, content, language, level, image_url, original_url, article_id):
+    def __init__(self, title, content, language, level, image_url, original_url, article_id, article_group_id):
         self.title = title
         self.content = content
         self.language = language
@@ -8,6 +8,7 @@ class Article:
         self.image_url = image_url
         self.original_url = original_url
         self.article_id = article_id
+        self.article_group_id = article_group_id
 
 
     def __str__(self):
@@ -21,7 +22,8 @@ class Article:
             'level': self.level,
             'image_url': self.image_url,
             'original_url': self.original_url,
-            'article_id': self.article_id
+            'article_id': self.article_id,
+            'article_group_id': self.article_group_id
         }
 
     @staticmethod
@@ -33,5 +35,6 @@ class Article:
             article_dict['level'],
             article_dict['image_url'],
             article_dict['original_url'],
-            article_dict['article_id']
+            article_dict['article_id'],
+            article_dict['article_group_id']
         )

@@ -19,7 +19,7 @@ for level in levels:
 
 # Takes a text input and simplifies the language using the GPT-4o-mini model
 def open_ai_simplify_text(text, target_level):
-    logger.info("Starting simplifying process.")
+    logger.info("Starting openai simplifying process.")
 
     client = OpenAI()
 
@@ -36,7 +36,7 @@ def open_ai_simplify_text(text, target_level):
         total_input_tokens = estimate_tokens(text)
         total_output_tokens = estimate_tokens(simplified_text)
 
-        logger.info("Translation process completed successfully.")
+        logger.info("Simplification process completed successfully.")
         logger.info(f"Input tokens: {total_input_tokens}, Output tokens: {total_output_tokens}")
         return simplified_text, total_input_tokens, total_output_tokens
 

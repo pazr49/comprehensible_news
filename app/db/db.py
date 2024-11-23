@@ -52,7 +52,8 @@ def init_db():
             content TEXT NOT NULL,
             language TEXT NOT NULL,
             level TEXT NOT NULL,
-            image_url TEXT
+            image_url TEXT, 
+            article_group_id TEXT
         )
     ''')
 

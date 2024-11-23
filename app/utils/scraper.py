@@ -16,6 +16,7 @@ logging.basicConfig(level=logging.INFO)
 def scrape_and_chunk_article(rss_article, chunk_size):
     try:
         article_content = scrape_bbc(rss_article.link)
+        print("Article content: ", article_content)
         if article_content is None:
             logger.error("Article content extraction failed for %s", rss_article.link)
             return None
@@ -75,7 +76,7 @@ def scrape_bbc(url):
         return None
 
     article_content = []
-    for position, tag in enumerate(article.find_all(['p', 'figure'])):
+    for position, tag in enumerate(article.find_all(['p', 'figure', 'h2'])):
         if tag.name == 'figure':
             img_tag = tag.find('img')
             if img_tag and 'srcset' in img_tag.attrs:
@@ -89,6 +90,11 @@ def scrape_bbc(url):
             paragraph_text = tag.get_text(strip=True)
             article_content.append(ArticleElement('paragraph', paragraph_text))
             logger.debug("Extracted paragraph text: %s", paragraph_text)
+        elif tag.name == 'h2':
+            if tag.find_parent('div', {'data-component': 'links-block'}) is None:
+                header_text = tag.get_text(strip=True)
+                article_content.append(ArticleElement('header', header_text))
+                logger.debug("Extracted header text: %s", header_text)
 
     logger.debug("Full article content extracted.")
     return article_content
@@ -101,6 +107,13 @@ def split_text_into_chunks(article_content, chunk_size):
     logger.debug("Starting text chunking process.")
     for element in article_content:
         if element.type == 'image':
+            if current_chunk.strip():
+                chunks.append(ArticleElement('paragraph', current_chunk.strip()))
+                current_chunk = ''
+                current_chunk_word_count = 0
+            chunks.append(element)
+            continue
+        if element.type == 'header':
             if current_chunk.strip():
                 chunks.append(ArticleElement('paragraph', current_chunk.strip()))
                 current_chunk = ''

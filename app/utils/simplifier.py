@@ -9,13 +9,14 @@ def simplify_article(rss_article, article_chunks, target_level):
     total_output_tokens = 0
 
     for chunk in article_chunks:
-        if chunk.type == 'image':
+        if chunk.type in ['image', 'header']:
+            if chunk.type == 'image' and chunk == article_chunks[0]:
+                continue
             simplified_text_array.append(chunk)
             continue
-
         try:
-            simplified_text, num_input_tokens, num_output_tokens = open_ai_simplify_text(chunk.content, target_level)
-            if simplified_text is None:
+            simplified_chunk, num_input_tokens, num_output_tokens = open_ai_simplify_text(chunk.content, target_level)
+            if simplified_chunk is None:
                 raise ValueError("Simplified text is None")
         except Exception as e:
             logging.error("Text simplification failed for chunk in %s: %s", rss_article.link, str(e))
@@ -23,7 +24,7 @@ def simplify_article(rss_article, article_chunks, target_level):
 
         total_input_tokens += num_input_tokens
         total_output_tokens += num_output_tokens
-        simplified_text_array.append(ArticleElement('paragraph', simplified_text))
+        simplified_text_array.append(ArticleElement('paragraph', simplified_chunk))
 
     logger.info("Text simplification process completed successfully for %s", rss_article.link)
 

@@ -43,6 +43,9 @@ def bbc_rss_reader(feed_name="news", num_articles=5):
         articles = []
         for entry in feed.entries[:num_articles]:
             thumbnail_url = entry.get("media_thumbnail")[0]['url'] if entry.get("media_thumbnail") else None
+            if thumbnail_url:
+                thumbnail_url = thumbnail_url.replace('/240/', '/1536/')
+
             article = RssArticle(
                 feed_name=feed_name,
                 title=entry.get("title"),
