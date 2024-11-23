@@ -7,6 +7,7 @@ class RssArticle:
         self.published = published
         self.thumbnail = thumbnail
         self.feed_name = feed_name
+        self.group_id = None
 
 
     def to_dict(self):
@@ -16,5 +17,6 @@ class RssArticle:
             "summary": self.summary,
             "published": self.published,
             "thumbnail": self.thumbnail,
-            "feed_name": self.feed_name
+            "feed_name": self.feed_name,
+            "group_id": self.group_id
         }

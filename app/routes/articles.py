@@ -1,6 +1,6 @@
 import logging
 from flask import Blueprint, jsonify
-from app.db.article_db import get_articles, get_article_by_id
+from app.db.article_db import get_articles, get_article_by_id, get_articles_by_group_id
 from flask import request
 
 # Configure logging
@@ -42,3 +42,24 @@ def get_article():
     except Exception as e:
         logger.error(f"Error fetching article: {e}")
         return jsonify({'error': 'An error occurred while fetching the article'}), 500
+
+@articles_bp.route('/article_group', defaults={'language': None}, methods=['GET'])
+@articles_bp.route('/article_group/<language>', methods=['GET'])
+def fetch_articles_by_group_id(language):
+    article_group_id = request.args.get('id')
+    if not article_group_id:
+        logger.error("Article Group ID is required")
+        return jsonify({'error': 'Article Group ID is required'}), 400
+
+    try:
+        logger.debug(f"Fetching articles with Group ID: {article_group_id} and language: {language}")
+        articles = get_articles_by_group_id(article_group_id, language)
+        if articles:
+            logger.debug(f"Found {len(articles)} articles")
+            return jsonify([article for article in articles])
+        else:
+            logger.error(f"Articles with Group ID {article_group_id} not found")
+            return jsonify({'error': 'Articles not found'}), 404
+    except Exception as e:
+        logger.error(f"Error fetching articles: {e}")
+        return jsonify({'error': 'An error occurred while fetching the articles'}), 500
