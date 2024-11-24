@@ -1,0 +1,47 @@
+
+# Instructions for how to run the serve locally
+
+1. Start Redis server on your local machine by running the following command:
+```bash
+redis-server
+```
+2. Start the Celery worker by running the following command:
+```bash
+celery -A celery_config.celery_app worker --loglevel=info
+```
+
+
+
+# Instructions for how to redeploy the server on Heroku with existing app and git repository
+
+1. Freezing the requirements.txt file:
+```bash
+pip freeze > requirements.txt
+```
+2. Create a Procfile with the following content:
+```bash
+web: gunicorn run:app
+worker: celery -A celery_config.celery_app worker --loglevel=info
+```
+3. Commit the changes to the git repository:
+```bash
+git add .
+git commit -m "Updated requirements.txt and Procfile"
+```
+4. Push the changes to the Heroku app:
+```bash
+git push heroku master
+```
+
+Terminate Celery:
+If you started Celery in a terminal or command prompt, you can stop it by pressing Ctrl+C.
+If Celery is running as a background process, you can find its process ID (PID) and terminate it using the taskkill command in Windows:
+tasklist | findstr "celery"
+taskkill /PID <PID> /F
+Replace <PID> with the actual process ID of the Celery worker.
+Terminate Redis:
+If you started Redis in a terminal or command prompt, you can stop it by pressing Ctrl+C.
+If Redis is running as a background process, you can find its process ID (PID) and terminate it using the taskkill command in Windows:
+tasklist | findstr "redis-server"
+taskkill /PID <PID> /F
+Replace <PID> with the actual process ID of the Redis server.

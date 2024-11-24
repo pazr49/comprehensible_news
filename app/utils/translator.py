@@ -17,15 +17,15 @@ def translate_article(article, target_language):
     total_output_tokens = 0
 
     for element in article.content:
-        if element['type'] == 'image':
-            translated_text_array.append(ArticleElement('image', element['content']))
+        if element.type == 'image':
+            translated_text_array.append(ArticleElement('image', element.content))
             continue
-        if element['type'] == 'header':
-            translated_header = translate_text(element['content'], target_language)  # Translate to Spanish
+        if element.type == 'header':
+            translated_header = translate_text(element.content, target_language)  # Translate to Spanish
             translated_text_array.append(ArticleElement('header', translated_header))
             continue
         try:
-            translated_text, num_input_tokens, num_output_tokens = open_ai_translate_text(element['content'], target_language, article.level)
+            translated_text, num_input_tokens, num_output_tokens = open_ai_translate_text(element.content, target_language, article.level)
             if translated_text is None:
                 raise ValueError("Translated text is None")
         except Exception as e:

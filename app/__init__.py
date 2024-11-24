@@ -19,11 +19,7 @@ def create_app():
 
     # Register Blueprints
     from app.routes.articles import articles_bp
-    from app.routes.sources import sources_bp
-    from app.routes.article_content import article_content_bp
 
     app.register_blueprint(articles_bp)
-    app.register_blueprint(sources_bp)
-    app.register_blueprint(article_content_bp)
 
     return app

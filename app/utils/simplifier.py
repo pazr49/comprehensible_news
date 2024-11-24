@@ -3,7 +3,7 @@ from app.models.article_element import ArticleElement
 from app.utils.openai_client import open_ai_simplify_text
 from app.utils import logger
 
-def simplify_article(rss_article, article_chunks, target_level):
+def simplify_article(url, article_chunks, target_level):
     simplified_text_array = []
     total_input_tokens = 0
     total_output_tokens = 0
@@ -19,13 +19,13 @@ def simplify_article(rss_article, article_chunks, target_level):
             if simplified_chunk is None:
                 raise ValueError("Simplified text is None")
         except Exception as e:
-            logging.error("Text simplification failed for chunk in %s: %s", rss_article.link, str(e))
+            logging.error("Text simplification failed for chunk in %s: %s", url, str(e))
             continue
 
         total_input_tokens += num_input_tokens
         total_output_tokens += num_output_tokens
         simplified_text_array.append(ArticleElement('paragraph', simplified_chunk))
 
-    logger.info("Text simplification process completed successfully for %s", rss_article.link)
+    logger.info("Text simplification process completed successfully for %s", url)
 
     return simplified_text_array, total_input_tokens, total_output_tokens

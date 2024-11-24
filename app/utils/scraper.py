@@ -13,17 +13,17 @@ from app.models.article_element import ArticleElement
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
-def scrape_and_chunk_article(rss_article, chunk_size):
+def scrape_and_chunk_article(url, chunk_size):
     try:
-        article_content = scrape_bbc(rss_article.link)
+        article_content, title, thumbnail = scrape_bbc(url)
         print("Article content: ", article_content)
         if article_content is None:
-            logger.error("Article content extraction failed for %s", rss_article.link)
+            logger.error("Article content extraction failed for %s", url)
             return None
 
         chunks = split_text_into_chunks(article_content, chunk_size)
-        logger.info(f"Text chunking process completed successfully for {rss_article.link}")
-        return chunks
+        logger.info(f"Text chunking process completed successfully for {url}")
+        return chunks, title, thumbnail
     except Exception as e:
         logger.exception("An error occurred while scraping and chunking the article: %s", e)
         return None
@@ -76,6 +76,7 @@ def scrape_bbc(url):
         return None
 
     article_content = []
+    thumbnail = ''
     for position, tag in enumerate(article.find_all(['p', 'figure', 'h2'])):
         if tag.name == 'figure':
             img_tag = tag.find('img')
@@ -84,6 +85,9 @@ def scrape_bbc(url):
                 image_url = srcset.split(',')[-1].split()[0]
                 article_content.append(ArticleElement('image', image_url))
                 logger.debug("Extracted image URL: %s", image_url)
+                if not thumbnail:
+                    thumbnail = image_url
+                    logger.debug("Assigned thumbnail URL: %s", thumbnail)
         elif tag.name == 'p':
             for u_tag in tag.find_all('u'):
                 u_tag.decompose()
@@ -97,7 +101,7 @@ def scrape_bbc(url):
                 logger.debug("Extracted header text: %s", header_text)
 
     logger.debug("Full article content extracted.")
-    return article_content
+    return article_content, title, thumbnail
 
 def split_text_into_chunks(article_content, chunk_size):
     chunks = []

@@ -17,7 +17,7 @@ class Article:
     def to_dict(self):
         return {
             'title': self.title,
-            'content': self.content,
+            'content': [element.to_dict() for element in self.content],
             'language': self.language,
             'level': self.level,
             'image_url': self.image_url,

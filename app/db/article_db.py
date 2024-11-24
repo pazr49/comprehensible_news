@@ -126,19 +126,21 @@ def get_articles_by_group_id(article_group_id, language=None):
     conn.close()
 
     if articles:
-        articles_list = [
-            {
-                'article_id': article[1],
-                'original_url': article[2],
-                'title': article[3],
-                'content': article[4],
-                'language': article[5],
-                'level': article[6],
-                'image_url': article[7],
-                'article_group_id': article[8]
-            }
-            for article in articles
-        ]
+        articles_list = []
+        for article in articles:
+            content = json.loads(article[4])
+            article_elements = [ArticleElement.from_dict(e) for e in content]
+            article_obj = Article(
+                article_id=article[1],
+                original_url=article[2],
+                title=article[3],
+                content=article_elements,
+                language=article[5],
+                level=article[6],
+                image_url=article[7],
+                article_group_id=article[8]
+            )
+            articles_list.append(article_obj)
         return articles_list
 
     return None
