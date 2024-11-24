@@ -16,7 +16,6 @@ logging.basicConfig(level=logging.INFO)
 def scrape_and_chunk_article(url, chunk_size):
     try:
         article_content, title, thumbnail = scrape_bbc(url)
-        print("Article content: ", article_content)
         if article_content is None:
             logger.error("Article content extraction failed for %s", url)
             return None

@@ -12,6 +12,8 @@ def simplify_and_store_articles(urls):
     target_levels = ["A1", "A2", "B1"]
     chunk_size = 500
     article_ids = []
+    group_ids = []
+
 
     for url in urls:
         # Check if the url already exists in the database
@@ -20,6 +22,7 @@ def simplify_and_store_articles(urls):
             continue
 
         article_group_id = f"article_group_{''.join(random.choices(string.ascii_lowercase + string.digits, k=12))}"
+        group_ids.append(article_group_id)
         for target_level in target_levels:
             try:
                 chunked_article, title, thumbnail  = scrape_and_chunk_article(url, chunk_size)
@@ -58,4 +61,4 @@ def simplify_and_store_articles(urls):
                 logging.error("Failed to store simplified url '%s' at level '%s': %s",simplified_article.article_id, target_level, e)
                 return None
 
-    return article_ids
+    return article_ids, group_ids

@@ -18,7 +18,7 @@ def create_app():
     init_db()
 
     # Register Blueprints
-    from app.routes.articles import articles_bp
+    from app.routes.articles_route import articles_bp
 
     app.register_blueprint(articles_bp)
 
