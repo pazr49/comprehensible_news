@@ -51,7 +51,8 @@ def init_db():
             level TEXT NOT NULL,
             image_url TEXT, 
             article_group_id TEXT, 
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
+            tags TEXT[]
         )
     ''')
 

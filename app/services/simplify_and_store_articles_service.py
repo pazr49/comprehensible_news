@@ -7,12 +7,19 @@ from app.utils.simplifier import simplify_article
 from app.db.article_db import store_article, get_article_by_url
 import random
 import string
+from datetime import datetime
 
-def simplify_and_store_articles(urls):
+def simplify_and_store_articles(urls, tags):
     target_levels = ["A1", "A2", "B1"]
+    available_tags = ["news", "country-co", "country-uk", "country-fr", "top-pick"]
     chunk_size = 500
     article_ids = []
     group_ids = []
+
+    for tag in tags:
+        if tag not in available_tags:
+            logging.error(f"Invalid tag '{tag}'")
+            return
 
     for url in urls:
         if get_article_by_url(url):
@@ -36,6 +43,8 @@ def simplify_and_store_articles(urls):
                 logging.error(f"Failed to simplify url '{url}' at level '{target_level}': {e}")
                 continue
 
+            current_timestamp = datetime.now()
+
             article_id = f"article_{''.join(random.choices(string.ascii_lowercase + string.digits, k=12))}"
             simplified_article = Article(
                 article_id=article_id,
@@ -45,7 +54,9 @@ def simplify_and_store_articles(urls):
                 language="en",
                 level=target_level,
                 image_url=thumbnail,
-                article_group_id=article_group_id
+                article_group_id=article_group_id,
+                created_at=current_timestamp,
+                tags=tags
             )
 
             article_ids.append(article_id)

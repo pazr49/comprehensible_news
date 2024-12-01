@@ -1,4 +1,7 @@
 import logging
+
+from nltk.sem.chat80 import country
+
 from app.services.simplify_and_store_articles_service import simplify_and_store_articles
 from app.services.translate_and_store_articles_service import translate_and_store_articles
 from app.utils.bbc_rss_reader import bbc_rss_reader
@@ -11,12 +14,12 @@ def daily_news_batch():
     """
     Fetches articles from various BBC RSS feeds, simplifies them, and translates them into specified languages.
     """
-    rss_feeds = ["world", "uk", "technology", "politics", "latin_america", "europe"]
+    rss_feeds = ["world"]
 
     for feed in rss_feeds:
         try:
             # Fetch articles from the RSS feed
-            articles = bbc_rss_reader(feed, 5)
+            articles = bbc_rss_reader(feed, 2)
             if not articles:
                 logger.warning(f"No articles found for feed '{feed}'")
                 continue
@@ -24,7 +27,7 @@ def daily_news_batch():
             urls = [article.link for article in articles]
 
             # Simplify and store articles
-            article_ids, group_ids = simplify_and_store_articles(urls)
+            article_ids, group_ids = simplify_and_store_articles(urls, ['news', 'country-uk'])
             if not article_ids:
                 logger.warning(f"No articles were simplified for feed '{feed}'")
                 continue

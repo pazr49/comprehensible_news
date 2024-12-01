@@ -39,7 +39,9 @@ def translate_and_store_articles(article_group_id, target_languages):
                 language=target_language,
                 level=article.level,
                 image_url=article.image_url,
-                article_group_id=article.article_group_id
+                article_group_id=article.article_group_id,
+                created_at=article.created_at,
+                tags=article.tags
             )
 
             try:

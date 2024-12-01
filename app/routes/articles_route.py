@@ -1,6 +1,6 @@
 import logging
 from flask import Blueprint, jsonify, request
-from app.db.article_db import get_articles, get_article_by_id, get_articles_by_group_id
+from app.db.article_db import get_articles, get_article_by_id, get_articles_by_group_id, get_todays_articles, get_articles_by_tag
 from app.utils.bbc_rss_reader import bbc_rss_reader
 
 # Configure logging
@@ -138,3 +138,46 @@ def add_articles_from_rss_feed():
     except Exception as e:
         logger.error(f"Error adding articles from RSS feed: {e}")
         return jsonify({'error': 'An error occurred while adding articles from RSS feed'}), 500
+
+
+# Route to get today's articles
+@articles_bp.route('/todays_articles', methods=['GET'])
+def todays_articles():
+    try:
+        logger.info("Fetching today's articles")
+        articles = get_todays_articles()
+        if articles:
+            logger.debug(f"Found {len(articles)} articles")
+            return jsonify([article.to_dict() for article in articles])
+        else:
+            logger.warning("No articles found")
+            return jsonify({'message': 'No articles found'}), 404
+    except Exception as e:
+        logger.error(f"Error fetching today's articles: {e}")
+        return jsonify({'error': 'An error occurred while fetching today\'s articles'}), 500
+
+# Route get articles by tag
+@articles_bp.route('/articles_by_tag', methods=['GET'])
+def articles_by_tag():
+    tag = request.args.get('tag')
+    language = request.args.get('language')
+    if not tag:
+        logger.error("Tag is required")
+        return jsonify({'error': 'Tag is required'}), 400
+
+    if not language:
+        logger.error("Language is required")
+        return jsonify({'error': 'Language is required'}), 400
+
+    try:
+        logger.info(f"Fetching articles with tag: {tag}")
+        articles = get_articles_by_tag(tag=tag, language=language)
+        if articles:
+            logger.debug(f"Found {len(articles)} articles")
+            return jsonify([article.to_dict() for article in articles])
+        else:
+            logger.warning(f"No articles found with tag: {tag}")
+            return jsonify({'message': 'No articles found'}), 404
+    except Exception as e:
+        logger.error(f"Error fetching articles: {e}")
+        return jsonify({'error': 'An error occurred while fetching articles'}), 500
