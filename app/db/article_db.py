@@ -11,27 +11,28 @@ def store_article(article):
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Check if an article with the same URL, language, and level already exists
+        logging.info("Checking if the article already exists in the database.")
         cursor.execute('''
             SELECT id FROM articles WHERE original_url = %s AND language = %s AND level = %s
         ''', (article.original_url, article.language, article.level))
         existing_article = cursor.fetchone()
 
         if existing_article is not None:
-            # Update the existing article
+            logging.info("Article exists. Updating the existing article.")
             cursor.execute('''
                 UPDATE articles
-                SET article_id = %s, title = %s, translated_text = %s, image_url = %s
+                SET article_id = %s, title = %s, content = %s, image_url = %s
                 WHERE id = %s
             ''', (article.article_id, article.title, article.content, article.image_url, existing_article[0]))
         else:
-            # Insert a new article
+            logging.info("Article does not exist. Inserting a new article.")
             cursor.execute('''
-                INSERT INTO articles (article_id, original_url, title, content, language, level, image_url, article_group_id)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-            ''', (article.article_id, article.original_url, article.title, article.content, article.language, article.level, article.image_url, article.article_group_id))
+                INSERT INTO articles (article_id, original_url, title, content, language, level, image_url, article_group_id, created_at, tags)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ''', (article.article_id, article.original_url, article.title, article.content, article.language, article.level, article.image_url, article.article_group_id, article.created_at, article.tags))
 
         conn.commit()
+        logging.info("Article stored successfully.")
     except psycopg2.Error as e:
         logging.error(f"Error storing article in the database: {e}")
         return False
@@ -43,7 +44,7 @@ def store_article(article):
 def get_articles(language='en', level='A1'):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute('SELECT article_id, original_url, title, language, level, image_url, article_group_id FROM articles WHERE language = %s AND level = %s', (language, level))
+    cursor.execute('SELECT article_id, original_url, title, language, level, image_url, article_group_id, created_at, tags FROM articles WHERE language = %s AND level = %s', (language, level))
     articles = cursor.fetchall()
     conn.close()
 
@@ -56,7 +57,9 @@ def get_articles(language='en', level='A1'):
                 'language': article[3],
                 'level': article[4],
                 'image_url': article[5],
-                'article_group_id': article[6]
+                'article_group_id': article[6],
+                'created_at': article[7],
+                'tags': article[8]
             }
             for article in articles
         ]
@@ -82,7 +85,9 @@ def get_article_by_id(article_id):
             'language': article[5],
             'level': article[6],
             'image_url': article[7],
-            'article_group_id': article[8]
+            'article_group_id': article[8],
+            'created_at': article[9],
+            'tags': article[10]
         }
         return Article.from_dict(article_dict)
     return None
@@ -106,7 +111,9 @@ def get_article_by_url(original_url):
             'language': article[5],
             'level': article[6],
             'image_url': article[7],
-            'article_group_id': article[8]
+            'article_group_id': article[8],
+            'created_at': article[9],
+            'tags': article[10]
         }
         return Article.from_dict(article_dict)
     return None
@@ -138,7 +145,72 @@ def get_articles_by_group_id(article_group_id, language=None):
                 language=article[5],
                 level=article[6],
                 image_url=article[7],
-                article_group_id=article[8]
+                article_group_id=article[8],
+                created_at=article[9],
+                tags=article[10]
+            )
+            articles_list.append(article_obj)
+        return articles_list
+
+    return None
+
+# Get articles created today
+def get_todays_articles():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT article_id, original_url, title, language, level, image_url, article_group_id, created_at, tags 
+        FROM articles 
+        WHERE created_at >= CURRENT_DATE - INTERVAL '7 day'
+    ''')
+    articles = cursor.fetchall()
+    conn.close()
+
+    if articles:
+        articles_list = []
+        for article in articles:
+            article_obj = Article(
+                article_id=article[0],
+                original_url=article[1],
+                title=article[2],
+                content={},  # Exclude content field
+                language=article[3],
+                level=article[4],
+                image_url=article[5],
+                article_group_id=article[6],
+                created_at=article[7],
+                tags=article[8]
+            )
+            articles_list.append(article_obj)
+        return articles_list
+
+    return None
+
+def get_articles_by_tag(tag, language='en'):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT article_id, original_url, title, language, level, image_url, article_group_id, created_at, tags 
+        FROM articles 
+        WHERE %s = ANY(tags) AND language = %s AND level = 'A1'
+    ''', (tag, language))
+    articles = cursor.fetchall()
+    conn.close()
+
+    if articles:
+        articles_list = []
+        for article in articles:
+            article_obj = Article(
+                article_id=article[0],
+                original_url=article[1],
+                title=article[2],
+                content={},
+                language=article[3],
+                level=article[4],
+                image_url=article[5],
+                article_group_id=article[6],
+                created_at=article[7],
+                tags=article[8]
             )
             articles_list.append(article_obj)
         return articles_list
